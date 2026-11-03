@@ -17,10 +17,12 @@ create table if not exists public.ah_players (
   name        text not null check (char_length(name) between 1 and 16),
   renames     integer not null default 0,
   points      integer not null default 0,
+  medals      integer not null default 0,
   data        jsonb not null default '{}'::jsonb,
   created_at  timestamptz not null default now(),
   updated_at  timestamptz not null default now()
 );
+alter table public.ah_players add column if not exists medals integer not null default 0;
 alter table public.ah_players enable row level security;
 revoke all on table public.ah_players from anon, authenticated;
 
@@ -79,7 +81,9 @@ end
 $$;
 
 -- Guarda el progreso. El nombre solo se puede cambiar 2 veces.
-create or replace function public.ah_save(p_code text, p_name text, p_points integer, p_data jsonb)
+-- (si existía una versión anterior sin medallas, se quita)
+drop function if exists public.ah_save(text, text, integer, jsonb);
+create or replace function public.ah_save(p_code text, p_name text, p_points integer, p_medals integer, p_data jsonb)
 returns boolean
 language plpgsql
 security definer
@@ -102,6 +106,7 @@ begin
      set name       = case when v_change then v_new else v_old end,
          renames    = renames + case when v_change then 1 else 0 end,
          points     = greatest(0, least(coalesce(p_points, 0), 10000000)),
+         medals     = greatest(0, least(coalesce(p_medals, 0), 1000)),
          data       = p_data,
          updated_at = now()
    where code_hash = public.ah_hash(p_code);
@@ -117,7 +122,7 @@ stable
 security definer
 set search_path = public, extensions
 as $$
-  select json_build_object('name', name, 'renames', renames, 'points', points, 'data', data)
+  select json_build_object('name', name, 'renames', renames, 'points', points, 'medals', medals, 'data', data)
     from public.ah_players
    where code_hash = public.ah_hash(p_code)
 $$;
@@ -163,15 +168,16 @@ begin
 end
 $$;
 
--- Clasificación: solo nombre y puntos.
+-- Clasificación mundial: solo nombre, puntos y medallas.
+drop function if exists public.ah_top(integer);
 create or replace function public.ah_top(p_limit integer default 20)
-returns table (name text, points integer)
+returns table (name text, points integer, medals integer)
 language sql
 stable
 security definer
 set search_path = public, extensions
 as $$
-  select name, points
+  select name, points, medals
     from public.ah_players
    where points > 0
    order by points desc, updated_at asc
@@ -219,14 +225,14 @@ revoke all on public.ahorcado_jugando_ahora from anon, authenticated;
 
 revoke all on function public.ah_new_code() from public, anon, authenticated;
 revoke all on function public.ah_create(text) from public;
-revoke all on function public.ah_save(text, text, integer, jsonb) from public;
+revoke all on function public.ah_save(text, text, integer, integer, jsonb) from public;
 revoke all on function public.ah_load(text) from public;
 revoke all on function public.ah_regen(text) from public;
 revoke all on function public.ah_delete(text) from public;
 revoke all on function public.ah_top(integer) from public;
 revoke all on function public.ah_ping(text, text, text, boolean) from public;
 grant execute on function public.ah_create(text) to anon, authenticated;
-grant execute on function public.ah_save(text, text, integer, jsonb) to anon, authenticated;
+grant execute on function public.ah_save(text, text, integer, integer, jsonb) to anon, authenticated;
 grant execute on function public.ah_load(text) to anon, authenticated;
 grant execute on function public.ah_regen(text) to anon, authenticated;
 grant execute on function public.ah_delete(text) to anon, authenticated;

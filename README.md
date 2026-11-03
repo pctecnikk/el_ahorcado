@@ -3,10 +3,11 @@
 El juego del ahorcado para el móvil y el ordenador con **palabras de todo el mundo**: países, capitales, comida del mundo, animales, maravillas, naturaleza, palabras viajeras (las que el español tomó de otros idiomas) e instrumentos. El tema **Todo el mundo** las mezcla todas.
 
 - **Cada palabra tiene una pista** (por ejemplo, *Japón: arroz con pescado crudo*). Al acertar se ven también las tildes.
-- **30 niveles por tema.** Cada nivel tiene palabras más largas, más palabras que adivinar, menos fallos permitidos, la pista tapada (y luego con coste) y menos letras regaladas.
-- **Puntos** por cada palabra, un extra por los fallos que te sobren y un **premio** al terminar cada nivel. Si te ahorcan, los puntos se quedan, pero repites el nivel con palabras nuevas.
+- **50 niveles por tema.** Cada nivel tiene palabras más largas, más palabras que adivinar, menos fallos permitidos, la pista tapada (y luego con coste) y menos letras regaladas.
+- **Puntos y medallas**, como en los otros juegos: puntos por cada palabra (más un extra por los fallos que te sobren) y un premio al terminar cada nivel, que se suman en tus **puntos totales**. El panel **Puntos y medallas** enseña los puntos, el récord y el nivel de cada tema. Hay **medallas** por cómo superas cada nivel (Ojo de halcón, Gran viajero, Mochilero), por llegar a los niveles 10, 25 y 50 de cada tema y por las palabras acertadas. Si te ahorcan, los puntos se quedan, pero repites el nivel con palabras nuevas.
+- **Clasificación mundial** con los puntos y las medallas de cada jugador.
 - **Teclado en pantalla con Ñ**, o el teclado del ordenador.
-- **Puntos online con código de jugador** (por ejemplo `AH-7K3Q-9XPA`): sirve para recuperar el progreso en cualquier dispositivo y salir en la **clasificación**.
+- **Puntos online con código de jugador** (por ejemplo `AH-7K3Q-9XPA`): sirve para recuperar el progreso (puntos, niveles y medallas) en cualquier dispositivo.
 - Opciones del jugador: cambiar el nombre (2 veces como máximo), generar un código nuevo y borrar el jugador.
 - **Aviso de versión nueva** para quien tenga el juego abierto cuando se publica una actualización.
 

@@ -2,7 +2,7 @@
 <html lang="es"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="description" content="El ahorcado con palabras de todo el mundo: países, capitales, comida, animales, maravillas y más. 30 niveles, puntos y clasificación online.">
+<meta name="description" content="El ahorcado con palabras de todo el mundo: países, capitales, comida, animales, maravillas y más. 50 niveles, puntos y clasificación online.">
 <meta name="theme-color" content="#0f1830">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -114,6 +114,18 @@ details[open] summary{margin-bottom:8px}
 .dots i{width:12px;height:12px;border-radius:50%;background:var(--tile);border:2px solid var(--line)}
 .dots i.done{background:var(--good);border-color:var(--good)}
 .dots i.now{border-color:var(--gold)}
+.tot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.tot div{background:var(--bg);border-radius:12px;padding:10px 6px;display:flex;flex-direction:column;gap:2px}
+.tot b{font-family:var(--display);font-size:clamp(22px,6vw,30px);color:var(--gold);font-variant-numeric:tabular-nums}
+.tot span{font-size:12px;color:var(--muted)}
+.gtable{display:grid;grid-template-columns:1fr auto auto auto;gap:6px 14px;font-size:14px;font-variant-numeric:tabular-nums;align-items:baseline}
+.gtable span:not(:nth-child(4n+1)){text-align:right}
+.gtable .h{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips span{font-size:13px;font-weight:700;padding:4px 10px;border-radius:999px;border:1px solid var(--gold);color:var(--gold)}
+.medal{text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center;background:var(--panel);border:2px solid var(--gold);border-radius:16px;padding:12px}
+.medal .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:800}
+.medal .big{font-family:var(--display);font-weight:800;font-size:clamp(22px,6vw,32px);color:var(--gold);line-height:1.15}
 .wrow{display:grid;grid-template-columns:2.2em 1fr auto;gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
 .wrow:last-child{border-bottom:0}
 .wrow.me{color:var(--gold);font-weight:900}
@@ -122,7 +134,7 @@ details[open] summary{margin-bottom:8px}
 .update button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:10px 18px;background:#3a2600;color:var(--gold);cursor:pointer}
 .ver{text-align:center;font-size:12px;color:var(--muted);opacity:.8;font-variant-numeric:tabular-nums;padding:4px 0 8px}
 /* while playing, hide what is not needed */
-body.ingame #player,body.ingame #ranking,body.ingame #ver,body.ingame header .note,body.ingame header .sub{display:none}
+body.ingame #player,body.ingame #ranking,body.ingame #stats,body.ingame #ver,body.ingame header .note,body.ingame header .sub{display:none}
 body.ingame header h1{font-size:clamp(20px,5vw,30px)}
 body.ingame .wrap{gap:10px;padding-block:10px 24px}
 .play{display:flex;flex-direction:column;gap:12px}
@@ -164,7 +176,7 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
   <header>
     <h1 aria-label="El ahorcado"><span class="tiles" aria-hidden="true"><span class="t r">A</span><span class="t b">_</span><span class="t">O</span><span class="t y">R</span><span class="t">C</span><span class="t b">_</span><span class="t r">D</span><span class="t">O</span></span></h1>
     <span class="sub">El ahorcado · la vuelta al mundo</span>
-    <p class="note">Palabras de todo el mundo · 30 niveles por tema · clasificación online</p>
+    <p class="note">Palabras de todo el mundo · 50 niveles por tema · clasificación online</p>
   </header>
 
   <section class="card" id="player"></section>
@@ -205,6 +217,7 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
       <div class="side">
         <div class="dots" id="dots"></div>
         <div class="bubble" id="bubble" aria-live="polite"></div>
+        <div class="medal" id="medal" hidden></div>
         <div class="kb" id="kb"></div>
         <div class="row" style="justify-content:center"><button class="btn red" id="again" type="button" hidden>Siguiente</button></div>
         <p class="note" id="rules"></p>
@@ -212,7 +225,9 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
     </div>
   </section>
 
-  <section class="card" id="ranking"><h2>🏆 Clasificación</h2><div id="top"><p class="note">Cargando…</p></div></section>
+  <section class="card" id="stats"><h2>🏆 Puntos y medallas</h2><div id="statsBox"></div></section>
+
+  <section class="card" id="ranking"><h2>🌍 Clasificación mundial</h2><div id="top"><p class="note">Cargando…</p></div></section>
 
   <footer class="ver" id="ver"></footer>
 </div>
@@ -253,12 +268,13 @@ for(const k in THEMES)THEMES[k].w=THEMES[k].w.map(s=>{const [l,c]=s.split("|");r
 for(const k in THEMES)THEMES[k].w.sort((a,b)=>a.w.length-b.w.length);
 const ORDER=["todo",...Object.keys(THEMES).filter(k=>k!=="todo")];
 const PRAISE=["¡Bien!","¡Genial!","¡Muy bien!","¡Eso es!","¡Salvado!","¡Fantástico!","¡Bravo!"];
-const LVMAX=30,MAX_RENAMES=2,PARTS=10;
+const LVMAX=50,MAX_RENAMES=2,PARTS=10,WORD_MEDALS=[25,100,250,500,1000];
 
 /* ---------- player (this device, and online with a code) ---------- */
 const LS="ahorcado-mundo-v1";
 function norm(p){p=p||{};return{name:String(p.name||"").slice(0,16),code:typeof p.code==="string"&&/^AH-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(p.code)?p.code:undefined,
-  points:Math.max(0,Math.round(+p.points||0)),levels:(p.levels&&typeof p.levels==="object")?p.levels:{},found:Math.max(0,+p.found||0),renames:Math.max(0,Math.min(99,+p.renames||0)),updated:+p.updated||0}}
+  points:Math.max(0,Math.round(+p.points||0)),levels:(p.levels&&typeof p.levels==="object")?p.levels:{},found:Math.max(0,+p.found||0),renames:Math.max(0,Math.min(99,+p.renames||0)),updated:+p.updated||0,
+  themes:(p.themes&&typeof p.themes==="object")?p.themes:{},medals:Array.isArray(p.medals)?p.medals.filter(m=>typeof m==="string").slice(0,200):[]}}
 let P=null;try{const j=JSON.parse(localStorage.getItem(LS)||"null");if(j&&j.name)P=norm(j)}catch(e){}
 function saveLocal(){try{if(P)localStorage.setItem(LS,JSON.stringify(P));else localStorage.removeItem(LS)}catch(e){}}
 
@@ -269,7 +285,7 @@ function rpc(fn,args){if(!ONLINE)return Promise.reject(new Error("sin conexión 
     .then(async r=>{const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}if(!r.ok)throw new Error((j&&j.message)||("HTTP "+r.status));return j})}
 let saveT=null;
 function saveOnline(){if(!P||!P.code)return;clearTimeout(saveT);const me=P;saveT=setTimeout(()=>{
-  rpc("ah_save",{p_code:me.code,p_name:me.name,p_points:me.points,p_data:{levels:me.levels,found:me.found}}).then(ok=>{
+  rpc("ah_save",{p_code:me.code,p_name:me.name,p_points:me.points,p_medals:me.medals.length,p_data:{levels:me.levels,found:me.found,themes:me.themes,medals:me.medals}}).then(ok=>{
     if(ok===false&&P===me){P.code=undefined;saveLocal();setMsg("Tu código ha cambiado en otro dispositivo o ya no existe. Recupéralo con «¿Ya tienes un código?».")}loadTop()}).catch(()=>{})},800)}
 function save(){P.updated=Date.now();saveLocal();saveOnline()}
 let msg="";function setMsg(t){msg=t;renderPlayer()}
@@ -281,7 +297,7 @@ function renderPlayer(){
   if(!P){
     h=`<b>¿Cómo te llamas?</b><div class="nrow"><input id="pName" maxlength="16" placeholder="Tu nombre de jugador" autocomplete="off"><button class="btn" id="pGo" type="button">¡A jugar!</button></div>`+(ONLINE?haveCodeUI():"");
   }else{
-    h=`<div class="row" style="justify-content:space-between"><span>Juega <b id="pN"></b> · <b style="color:var(--gold)">${P.points.toLocaleString("es-ES")}</b> puntos</span></div>`;
+    h=`<div class="row" style="justify-content:space-between"><span>Juega <b id="pN"></b> · <b style="color:var(--gold)">${P.points.toLocaleString("es-ES")}</b> puntos · <b style="color:var(--gold)">${P.medals.length}</b> ${P.medals.length===1?"medalla":"medallas"}</span></div>`;
     if(P.code)h+=`<div class="row"><span class="note">Tu código:</span><span class="code" id="pCode"></span><button class="btn ghost" id="cCopy" type="button">Copiar</button></div><p class="note">Apúntalo: con él recuperas tus puntos en cualquier móvil u ordenador.</p>`;
     else if(ONLINE)h+=`<div class="row"><button class="btn red" id="cCreate" type="button">🌍 Guardar online y salir en la clasificación</button></div>`+haveCodeUI();
     const left=MAX_RENAMES-P.renames;
@@ -294,12 +310,12 @@ function renderPlayer(){
   if(msg)h+=`<p class="note msg" id="pMsg" role="status"></p>`;
   el.innerHTML=h;if(msg)$("pMsg").textContent=msg;
   if($("pN"))$("pN").textContent=P.name;if($("pCode"))$("pCode").textContent=P.code;
-  if($("pGo")){const go=()=>{const n=$("pName").value.trim().slice(0,16);if(!n){setMsg("Escribe tu nombre primero.");return}P=norm({name:n,updated:Date.now()});saveLocal();msg="";renderPlayer();renderThemes()};$("pGo").onclick=go;$("pName").addEventListener("keydown",e=>{if(e.key==="Enter")go()})}
+  if($("pGo")){const go=()=>{const n=$("pName").value.trim().slice(0,16);if(!n){setMsg("Escribe tu nombre primero.");return}P=norm({name:n,updated:Date.now()});saveLocal();msg="";renderPlayer();renderThemes();renderStats()};$("pGo").onclick=go;$("pName").addEventListener("keydown",e=>{if(e.key==="Enter")go()})}
   if($("cCopy"))$("cCopy").onclick=()=>{try{navigator.clipboard.writeText(P.code).then(()=>{$("cCopy").textContent="¡Copiado!"},()=>{})}catch(e){}};
   if($("cCreate"))$("cCreate").onclick=async()=>{$("cCreate").disabled=true;try{const r=await rpc("ah_create",{p_name:P.name});P.code=r.code;save();msg="¡Código creado! Apúntalo bien: con él recuperas tus puntos en cualquier dispositivo.";renderPlayer();loadTop()}catch(e){$("cCreate").disabled=false;setMsg("No se ha podido crear el código. Revisa la conexión.")}};
   if($("cLoad")){const load=async()=>{const code=normCode($("cIn").value);if(!/^AH-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){setMsg("Escribe el código completo, por ejemplo AH-7K3Q-9XPA.");return}
       try{const r=await rpc("ah_load",{p_code:code});if(!r){setMsg("No existe ningún jugador con ese código.");return}
-        const d=r.data||{};P=norm({name:r.name,code,points:r.points,levels:d.levels,found:d.found,renames:r.renames,updated:Date.now()});saveLocal();msg="¡Recuperado! Hola, "+r.name+".";renderPlayer();renderThemes();loadTop()}
+        const d=r.data||{};P=norm({name:r.name,code,points:r.points,levels:d.levels,found:d.found,themes:d.themes,medals:d.medals,renames:r.renames,updated:Date.now()});saveLocal();msg="¡Recuperado! Hola, "+r.name+".";renderPlayer();renderThemes();renderStats();loadTop()}
       catch(e){setMsg("No se ha podido recuperar. Revisa la conexión.")}};
     $("cLoad").onclick=load;$("cIn").addEventListener("keydown",e=>{if(e.key==="Enter")load()})}
   if($("oRen"))$("oRen").onclick=renameUI;
@@ -326,7 +342,19 @@ let topList=[];
 function loadTop(){if(!ONLINE){$("top").innerHTML='<p class="note">La clasificación online no está activada.</p>';return}
   rpc("ah_top",{p_limit:20}).then(r=>{topList=Array.isArray(r)?r:[];renderTop()}).catch(()=>{$("top").innerHTML='<p class="note">No se ha podido cargar la clasificación.</p>'})}
 function renderTop(){const m=["🥇","🥈","🥉"];
-  $("top").innerHTML=topList.length?topList.map((d,i)=>`<div class="wrow${P&&P.code&&d.name===P.name&&d.points===P.points?" me":""}"><span>${m[i]||(i+1)+"º"}</span><span class="n">${esc(d.name)}</span><span>${Number(d.points).toLocaleString("es-ES")} pts</span></div>`).join(""):'<p class="note">Todavía no hay nadie. Pulsa «Guardar online» y sé la primera persona.</p>'}
+  $("top").innerHTML=topList.length?topList.map((d,i)=>`<div class="wrow${P&&P.code&&d.name===P.name&&d.points===P.points?" me":""}"><span>${m[i]||(i+1)+"º"}</span><span class="n">${esc(d.name)}</span><span>${Number(d.points).toLocaleString("es-ES")} pts · 🏅 ${Number(d.medals||0)}</span></div>`).join(""):'<p class="note">Todavía no hay nadie. Pulsa «Guardar online» y sé la primera persona.</p>'}
+
+/* ---------- points and medals ---------- */
+function tstat(k){if(!P.themes[k]||typeof P.themes[k]!=="object")P.themes[k]={pts:0,best:0,plays:0};return P.themes[k]}
+function addPts(n){if(!n||!P)return;P.points+=n;tstat(theme).pts+=n;S.earned+=n}
+function giveMedal(m){if(!P||P.medals.includes(m))return false;P.medals.push(m);return true}
+function renderStats(){const el=$("statsBox");if(!el)return;
+  if(!P){el.innerHTML='<p class="note">Escribe tu nombre arriba para empezar a sumar puntos y medallas.</p>';return}
+  const rows=ORDER.map(k=>{const s=P.themes[k]||{};return `<span>${THEMES[k].ic} ${esc(THEMES[k].n)}</span><span>${(s.pts||0).toLocaleString("es-ES")}</span><span>${(s.best||0).toLocaleString("es-ES")}</span><span>${lvUnlocked(k)}</span>`}).join("");
+  el.innerHTML=`<div class="tot"><div><b>${P.points.toLocaleString("es-ES")}</b><span>puntos totales</span></div><div><b>${P.medals.length}</b><span>${P.medals.length===1?"medalla":"medallas"}</span></div><div><b>${P.found.toLocaleString("es-ES")}</b><span>palabras acertadas</span></div></div>
+    <div class="gtable"><span class="h">Tema</span><span class="h">Puntos</span><span class="h">Récord</span><span class="h">Nivel</span>${rows}</div>
+    <p class="note">El récord es lo máximo que has ganado en un solo nivel.</p>`+
+    (P.medals.length?`<div class="chips">${P.medals.map(m=>`<span>🏅 ${esc(m)}</span>`).join("")}</div>`:`<p class="note">Aún sin medallas. ¡Supera un nivel para ganar la primera!</p>`)}
 
 /* ---------- sound ---------- */
 let ac=null;function A(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
@@ -341,15 +369,15 @@ let theme=null;const pick={};
 function lvUnlocked(th){return Math.min(LVMAX,Math.max(1,(P&&P.levels[th])||1))}
 function renderThemes(){$("themes").innerHTML=ORDER.map(k=>{const t=THEMES[k];return `<button class="theme${t.wide?" wide":""}" id="th-${k}" type="button" data-th="${k}"><span class="ico">${t.ic}</span><b>${t.n}</b><span>${t.d}</span><span class="lvtag">Nivel ${lvUnlocked(k)} de ${LVMAX}</span></button>`}).join("")}
 $("themes").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(!b)return;if(!P){setMsg("Primero escribe tu nombre aquí arriba.");$("pName")&&$("pName").focus();window.scrollTo({top:0,behavior:"smooth"});return}A();theme=b.dataset.th;startLevel()});
-function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;document.body.classList.remove("ingame");renderThemes();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
+function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;document.body.classList.remove("ingame");renderThemes();renderStats();renderPlayer();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
 $("back").onclick=()=>{try{if(location.hash==="#jugando"){history.back();setTimeout(()=>{if(!$("vGame").hidden)showThemes()},400);return}}catch(e){}showThemes()};
 window.addEventListener("popstate",()=>{if(!$("vGame").hidden)showThemes()});
 /* difficulty by level: fewer mistakes allowed, longer words, more words per level, the clue costs points, fewer letters given */
 function cfg(lv){
-  const lives=Math.max(6,10-Math.floor((lv-1)/5));
-  const words=lv<=10?3:lv<=20?4:5;
-  const clue=lv<=8?"free":lv<=18?"ask":"cost";
-  const hints=lv<=4?3:lv<=10?2:lv<=20?1:0;
+  const lives=Math.max(6,10-Math.floor((lv-1)/8));
+  const words=lv<=12?3:lv<=25?4:lv<=40?5:6;
+  const clue=lv<=12?"free":lv<=28?"ask":"cost";
+  const hints=lv<=6?3:lv<=16?2:lv<=30?1:0;
   const txt=`Puedes fallar ${lives} veces por palabra. `+(clue==="free"?"La pista se ve desde el principio.":clue==="ask"?"La pista está tapada: verla no cuesta puntos, pero si no la miras ganas 5 más.":"La pista está tapada y verla resta 10 puntos de la palabra.")+(hints?` Tienes ${hints} ${hints===1?"letra regalada":"letras regaladas"} por nivel.`:" Ya no hay letras regaladas.");
   return{lives,words,clue,hints,txt}}
 function renderLv(){const u=lvUnlocked(theme),lv=S.level,el=$("lv");
@@ -374,7 +402,7 @@ function chooseWords(lv,n){
   let pool=all.slice(start,start+win).filter(o=>!recent.includes(o.w));if(pool.length<n)pool=all.slice(start,start+win);
   const out=shuffle(pool).slice(0,n);S.recent[theme]=[...recent,...out.map(o=>o.w)].slice(-Math.floor(L/2));return out}
 function startLevel(){
-  const u=lvUnlocked(theme),lv=pick[theme]&&pick[theme]<=u?pick[theme]:u;S.level=lv;S.c=cfg(lv);S.hints=S.c.hints;S.earned=0;
+  const u=lvUnlocked(theme),lv=pick[theme]&&pick[theme]<=u?pick[theme]:u;S.level=lv;S.c=cfg(lv);S.hints=S.c.hints;S.earned=0;S.lvMiss=0;$("medal").hidden=true;
   S.list=chooseWords(lv,S.c.words);S.idx=0;
   $("vThemes").hidden=true;$("vGame").hidden=false;$("gTitle").textContent=THEMES[theme].ic+" "+THEMES[theme].n;
   $("rules").textContent=S.c.txt+" Pulsa las letras o escríbelas con el teclado.";
@@ -423,14 +451,14 @@ function guess(ch){
     if(revealedAll()){wordWon();return}
     SFX.ok();render();$("bubble").textContent=n>1?`¡Bien! La ${ch} sale ${n} veces.`:`¡Bien! Hay una ${ch}.`;
   }else{
-    S.miss++;SFX.bad();
+    S.miss++;S.lvMiss++;SFX.bad();
     if(S.miss>=S.c.lives){wordLost();return}
     const left=S.c.lives-S.miss;render();$("bubble").textContent=`No hay ninguna ${ch}. ${left===1?"¡Cuidado, solo te queda un fallo!":"Te quedan "+left+" fallos."}`;
   }
 }
 function wordWon(){
   S.state="won";const extra=3*(S.c.lives-S.miss),clueAdj=S.c.clue==="ask"&&!S.clueSeen?5:S.c.clue==="cost"&&S.clueSeen?-10:0;
-  const got=Math.max(5,wordPts()+extra+clueAdj);S.earned+=got;P.points+=got;P.found++;save();
+  const got=Math.max(5,wordPts()+extra+clueAdj);addPts(got);P.found++;const wm=WORD_MEDALS.find(n=>P.found===n);if(wm)giveMedal(`${wm} palabras acertadas`);save();
   $("gal").classList.add("saved");render();
   const last=S.idx>=S.list.length-1;
   $("bubble").textContent=`${rnd(PRAISE)} Era ${S.cur.label}. +${got} puntos`+(extra?` (incluye ${extra} por los fallos que te sobraron`+(clueAdj>0?" y 5 por no mirar la pista":clueAdj<0?", menos 10 por la pista":"")+")":clueAdj<0?" (menos 10 por la pista)":clueAdj>0?" (incluye 5 por no mirar la pista)":"")+".";
@@ -438,13 +466,22 @@ function wordWon(){
   SFX.word();$("again").hidden=false;$("again").textContent="Siguiente palabra →";$("again").onclick=()=>{S.idx++;startWord()};$("again").focus({preventScroll:true});
 }
 function wordLost(){
-  S.state="lost";$("gal").classList.add("dead");SFX.lose();render();
+  S.state="lost";$("gal").classList.add("dead");tstat(theme).plays++;save();SFX.lose();render();
   $("bubble").textContent=`¡Ahorcado! La palabra era ${S.cur.label}. Los puntos que has ganado se quedan, pero tienes que repetir el nivel ${S.level} con palabras nuevas.`;
   $("again").hidden=false;$("again").textContent="Repetir el nivel";$("again").onclick=()=>{pick[theme]=S.level;startLevel()};$("again").focus({preventScroll:true});
 }
 function levelWon(){
-  const lv=S.level,next=Math.min(LVMAX,lv+1),bonus=20+lv*5;pick[theme]=null;P.points+=bonus;if((P.levels[theme]||1)<next)P.levels[theme]=next;save();SFX.win();render();
-  $("bubble").textContent=lv<LVMAX?`¡Nivel ${lv} superado! Ganas ${bonus} puntos extra (${S.earned+bonus} en total) y desbloqueas el nivel ${next}, que será un poco más difícil.`:`¡Increíble! Has superado el nivel más difícil de este tema. +${bonus} puntos.`;
+  const lv=S.level,next=Math.min(LVMAX,lv+1),bonus=20+lv*5,tn=THEMES[theme].n;pick[theme]=null;addPts(bonus);
+  const st=tstat(theme);st.plays++;const rec=S.earned>(st.best||0);if(rec)st.best=S.earned;
+  /* medal for how well the level went, plus milestones */
+  const title=S.lvMiss===0?"Ojo de halcón":S.lvMiss<=S.list.length?"Gran viajero":"Mochilero";
+  const won=[];if(giveMedal(`${tn} · ${title}`))won.push(`${tn} · ${title}`);
+  if((P.levels[theme]||1)<next)P.levels[theme]=next;
+  const miles=[10,25].filter(m=>next>=m).map(m=>`${tn} · nivel ${m}`);if(lv===LVMAX)miles.push(`${tn} · nivel máximo`);
+  for(const m of miles)if(giveMedal(m))won.push(m);
+  save();SFX.win();render();
+  const md=$("medal");md.hidden=false;md.innerHTML=`<span class="eyebrow">Tu medalla</span><span class="big">🏅 ${esc(title)}</span><span class="note">${S.lvMiss===0?"¡Nivel sin ningún fallo!":S.lvMiss+(S.lvMiss===1?" fallo en todo el nivel":" fallos en todo el nivel")} · ${S.earned} puntos${rec?" · ¡nuevo récord!":""}</span>`+(won.length?`<span class="note" style="color:var(--gold)">Medallas nuevas: ${won.map(esc).join(", ")}</span>`:"");
+  $("bubble").textContent=lv<LVMAX?`¡Nivel ${lv} superado! Ganas ${bonus} puntos extra (${S.earned} en este nivel) y desbloqueas el nivel ${next}, que será un poco más difícil.`:`¡Increíble! Has superado el nivel más difícil de este tema. +${bonus} puntos.`;
   $("again").hidden=false;$("again").textContent=lv<LVMAX?`Jugar el nivel ${next}`:"Jugar otra vez";$("again").onclick=startLevel;$("again").focus({preventScroll:true});renderLv();
 }
 $("hint").onclick=()=>{if(S.hints<=0||S.state!=="play")return;
@@ -465,7 +502,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="1.0.0";
+const APP_VERSION="1.1.0";
 $("ver").textContent="Versión "+APP_VERSION;
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
@@ -475,7 +512,7 @@ $("ver").textContent="Versión "+APP_VERSION;
 
 /* ---------- start ---------- */
 try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}
-renderPlayer();renderThemes();loadTop();
+renderPlayer();renderThemes();renderStats();loadTop();
 if(P&&P.code)rpc("ah_load",{p_code:P.code}).then(r=>{if(!r)return;if(r.name!==P.name||r.renames!==P.renames){P.name=r.name;P.renames=Math.max(P.renames,r.renames||0);saveLocal();renderPlayer()}}).catch(()=>{});
 </script>
 </body></html>
