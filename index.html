@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="El ahorcado con palabras de todo el mundo: países, capitales, comida, animales, maravillas y más. 30 niveles, puntos y clasificación online.">
+<meta name="theme-color" content="#0f1830">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="El ahorcado">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>El ahorcado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Nunito:wght@400;700;900&family=JetBrains+Mono:wght@700;800&display=swap">
+<style>
+/* Layout: one column — big title, player card, theme tiles or the game, ranking.
+   Palette: deep navy night sky, turquoise sea and sunny yellow as accents (a trip around the world). */
+:root{
+  --bg:#0f1830; --panel:#18233f; --tile:#1f2c4f; --ink:#f6f2e8; --muted:#a9b3cc;
+  --red:#14a89a; --gold:#ffc23a; --good:#4cc38a; --bad:#ff6b6b; --line:rgba(246,242,232,.18);
+  --display:"Bricolage Grotesque","Arial Black",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+[hidden]{display:none!important}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:17px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  background-image:linear-gradient(180deg,rgba(20,168,154,.18),transparent 220px);background-repeat:no-repeat}
+.wrap{max-width:640px;margin:0 auto;padding-block:18px 48px;display:flex;flex-direction:column;gap:18px}
+header{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,8.5vw,56px);line-height:1;margin:0;letter-spacing:-.02em;text-wrap:balance}
+h1 .tiles{display:inline-flex;gap:.08em}
+h1 .t{display:inline-grid;place-items:center;width:.95em;height:1.1em;border-radius:.14em;background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:.8em}
+h1 .t.r{background:var(--red);color:#fff}
+h1 .t.y{background:var(--gold);color:#3a2600}
+h1 .t.b{background:transparent;color:var(--gold);box-shadow:inset 0 -.12em 0 var(--gold)}
+.sub{font-family:var(--display);font-weight:800;color:var(--gold);font-size:clamp(16px,4.4vw,24px);letter-spacing:.02em}
+h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;color:var(--gold)}
+.note{font-size:14px;color:var(--muted);line-height:1.5;margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:900;border:0;border-radius:999px;padding:12px 20px;cursor:pointer;background:var(--gold);color:#3a2600;touch-action:manipulation}
+.btn.red{background:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border:2px solid var(--line);font-weight:700;padding:9px 16px;font-size:15px}
+.btn:disabled{opacity:.45;cursor:default}
+.linkbtn{font:inherit;font-size:14px;background:none;border:0;color:var(--gold);cursor:pointer;text-decoration:underline;padding:4px}
+button:focus-visible,input:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.nrow{display:flex;gap:8px}
+.nrow input{flex:1;min-width:0;font:inherit;font-size:17px;padding:11px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink)}
+.code{font-family:var(--mono);font-size:19px;letter-spacing:.06em;color:var(--gold);user-select:all;-webkit-user-select:all}
+.msg{color:var(--gold);font-weight:700}
+details summary{cursor:pointer;font-weight:700;color:var(--gold)}
+details[open] summary{margin-bottom:8px}
+.opts{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+/* themes */
+.themes{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.theme{font:inherit;color:var(--ink);text-align:left;background:var(--panel);border:2px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;transition:border-color .15s,transform .1s}
+.theme:hover{border-color:var(--gold)}
+.theme:active{transform:scale(.98)}
+.theme .ico{font-size:30px;line-height:1}
+.theme b{font-size:18px}
+.theme span{color:var(--muted);font-size:13px}
+.theme .lvtag{color:var(--gold);font-weight:800}
+.theme.wide{grid-column:1/-1;border-color:var(--red);background:linear-gradient(90deg,rgba(20,168,154,.25),rgba(255,194,58,.12)),var(--panel)}
+/* game */
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);padding-block:6px;z-index:5}
+.backbtn{font:inherit;font-weight:900;font-size:16px;color:var(--ink);background:var(--panel);border:2px solid var(--line);border-radius:999px;padding:9px 16px;cursor:pointer;min-height:44px}
+.strip{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums;flex-wrap:wrap}
+.strip b{color:var(--gold)}
+.lv{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.lvlabel{font-weight:900;min-width:7.5em;text-align:center}
+.lvlabel b{color:var(--gold);font-size:20px}
+/* the gallows */
+.stage{background:var(--panel);border-radius:14px;padding:6px;display:flex;justify-content:center;position:relative}
+.gallows{width:100%;max-width:300px;height:auto;max-height:min(23vh,23svh);display:block}
+.gallows .wood{stroke:#c9a46a;stroke-width:7;stroke-linecap:round;fill:none}
+.gallows .rope{stroke:#e9d9b4;stroke-width:3;stroke-linecap:round;fill:none}
+.gallows .man{stroke:var(--ink);stroke-width:5;stroke-linecap:round;fill:none}
+.gallows .ghost{stroke:var(--line);opacity:.35}
+.gallows .pt{opacity:0;transition:opacity .25s}
+.gallows .pt.on{opacity:1}
+.gallows .face{opacity:0;transition:opacity .3s}
+.gallows.dead .face{opacity:1}
+.gallows.dead .man{stroke:var(--bad)}
+.gallows.saved .man{stroke:var(--good)}
+.lives{position:absolute;top:8px;right:12px;font-weight:900;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.lives b{color:var(--gold)}
+/* the word */
+.word{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;padding:6px 0;--ls:clamp(20px,7vw,40px)}
+.word .wd{display:flex;gap:clamp(3px,1vw,6px)}
+.word .l{width:calc(var(--ls) * .82);height:calc(var(--ls) * 1.2);display:grid;place-items:end center;font-family:var(--mono);font-weight:800;font-size:var(--ls);line-height:1;border-bottom:4px solid var(--muted);padding-bottom:2px}
+.word .l.sym{border-bottom-color:transparent}
+.word .l.in{animation:pop .3s ease-out;border-bottom-color:var(--gold)}
+.word .l.miss{color:var(--bad);border-bottom-color:var(--bad)}
+.word.long{--ls:clamp(16px,4.6vw,30px)}
+.word.xlong{--ls:clamp(13px,3.6vw,24px)}
+@keyframes pop{0%{transform:translateY(-6px) scale(1.3)}100%{transform:none}}
+.clue{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:center}
+.clue .tx{font-weight:700;color:var(--ink);background:rgba(20,168,154,.18);border:1px solid rgba(20,168,154,.5);border-radius:999px;padding:6px 14px}
+/* keyboard */
+.kb{display:flex;flex-direction:column;gap:6px;user-select:none;-webkit-user-select:none}
+.kr{display:flex;gap:5px;justify-content:center}
+.key{flex:1 1 0;max-width:52px;min-width:0;height:clamp(44px,12vw,56px);border:0;border-radius:10px;background:var(--tile);color:var(--ink);font-family:var(--mono);font-weight:800;font-size:clamp(16px,4.6vw,22px);cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 rgba(0,0,0,.35);padding:0}
+.key:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.key.ok{background:var(--good);color:#06301c}
+.key.no{background:transparent;color:var(--muted);opacity:.45;box-shadow:none;text-decoration:line-through}
+.key:disabled{cursor:default}
+.bubble{background:var(--panel);border-left:4px solid var(--red);border-radius:12px;padding:12px 14px;line-height:1.45;min-height:3.2em}
+.dots{display:flex;gap:6px;justify-content:center}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--tile);border:2px solid var(--line)}
+.dots i.done{background:var(--good);border-color:var(--good)}
+.dots i.now{border-color:var(--gold)}
+.wrow{display:grid;grid-template-columns:2.2em 1fr auto;gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.wrow:last-child{border-bottom:0}
+.wrow.me{color:var(--gold);font-weight:900}
+.wrow .n{min-width:0;overflow-wrap:anywhere}
+.update{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;background:var(--gold);color:#3a2600;font-weight:800;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
+.update button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:10px 18px;background:#3a2600;color:var(--gold);cursor:pointer}
+.ver{text-align:center;font-size:12px;color:var(--muted);opacity:.8;font-variant-numeric:tabular-nums;padding:4px 0 8px}
+/* while playing, hide what is not needed */
+body.ingame #player,body.ingame #ranking,body.ingame #ver,body.ingame header .note,body.ingame header .sub{display:none}
+body.ingame header h1{font-size:clamp(20px,5vw,30px)}
+body.ingame .wrap{gap:10px;padding-block:10px 24px}
+.play{display:flex;flex-direction:column;gap:12px}
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+@media (max-width:360px){
+  body{font-size:16px}
+  .theme{padding:11px}.theme b{font-size:16px}.theme .ico{font-size:26px}
+  .btn{padding:10px 16px}
+  .kr{gap:3px}
+}
+@media (min-width:600px){
+  .wrap{max-width:860px}
+  .themes{grid-template-columns:repeat(3,1fr);gap:12px}
+  .theme b{font-size:19px}
+  .bubble{font-size:16px}
+}
+/* landscape tablets, landscape phones and computers: drawing and word on the left, keyboard on the right */
+@media (min-width:700px) and (orientation:landscape), (min-width:1000px){
+  .play{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,44%);gap:20px;align-items:start}
+  .gallows{max-height:46vh}
+}
+@media (max-height:500px) and (orientation:landscape){
+  body.ingame header{display:none}
+  body.ingame .topbar{padding-block:2px}
+  .gallows{max-height:40vh}
+  .key{height:40px}
+  .themes{grid-template-columns:repeat(3,1fr)}
+}
+@media (min-width:1000px){
+  .wrap{max-width:1180px}
+  .play{grid-template-columns:minmax(0,1fr) 460px;gap:28px}
+  .themes{grid-template-columns:repeat(3,1fr)}
+  .bubble{font-size:17px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head><body>
+<div class="wrap">
+  <header>
+    <h1 aria-label="El ahorcado"><span class="tiles" aria-hidden="true"><span class="t r">A</span><span class="t b">_</span><span class="t">O</span><span class="t y">R</span><span class="t">C</span><span class="t b">_</span><span class="t r">D</span><span class="t">O</span></span></h1>
+    <span class="sub">El ahorcado · la vuelta al mundo</span>
+    <p class="note">Palabras de todo el mundo · 30 niveles por tema · clasificación online</p>
+  </header>
+
+  <section class="card" id="player"></section>
+
+  <section id="vThemes">
+    <h2 style="margin-bottom:12px">Elige un tema</h2>
+    <div class="themes" id="themes"></div>
+  </section>
+
+  <section id="vGame" hidden>
+    <div class="topbar"><button class="backbtn" id="back" type="button">← Temas</button><h2 id="gTitle"></h2></div>
+    <div class="lv" id="lv" style="margin-top:10px"></div>
+    <div class="play" style="margin-top:12px">
+      <div class="side">
+        <div class="strip"><span id="count"></span><span>Puntos: <b id="pts">0</b></span><button class="btn ghost" id="hint" type="button">💡 Letra</button></div>
+        <div class="stage">
+          <svg class="gallows" id="gal" viewBox="0 0 220 230" role="img" aria-label="Dibujo del ahorcado">
+            <g class="ghost">
+              <line class="wood" x1="20" y1="215" x2="150" y2="215"/><line class="wood" x1="55" y1="215" x2="55" y2="18"/><line class="wood" x1="55" y1="18" x2="155" y2="18"/><line class="wood" x1="55" y1="55" x2="92" y2="18"/>
+            </g>
+            <line class="wood pt" id="p0" x1="20" y1="215" x2="150" y2="215"/>
+            <line class="wood pt" id="p1" x1="55" y1="215" x2="55" y2="18"/>
+            <g class="pt" id="p2"><line class="wood" x1="55" y1="18" x2="155" y2="18"/><line class="wood" x1="55" y1="55" x2="92" y2="18"/></g>
+            <line class="rope pt" id="p3" x1="155" y1="18" x2="155" y2="48"/>
+            <circle class="man pt" id="p4" cx="155" cy="66" r="18"/>
+            <line class="man pt" id="p5" x1="155" y1="84" x2="155" y2="142"/>
+            <line class="man pt" id="p6" x1="155" y1="98" x2="128" y2="124"/>
+            <line class="man pt" id="p7" x1="155" y1="98" x2="182" y2="124"/>
+            <line class="man pt" id="p8" x1="155" y1="142" x2="133" y2="184"/>
+            <line class="man pt" id="p9" x1="155" y1="142" x2="177" y2="184"/>
+            <g class="face man" style="stroke-width:3"><line x1="146" y1="60" x2="152" y2="66"/><line x1="152" y1="60" x2="146" y2="66"/><line x1="158" y1="60" x2="164" y2="66"/><line x1="164" y1="60" x2="158" y2="66"/></g>
+          </svg>
+          <span class="lives" id="lives"></span>
+        </div>
+        <div class="word" id="word" aria-live="polite"></div>
+        <div class="clue" id="clue"></div>
+      </div>
+      <div class="side">
+        <div class="dots" id="dots"></div>
+        <div class="bubble" id="bubble" aria-live="polite"></div>
+        <div class="kb" id="kb"></div>
+        <div class="row" style="justify-content:center"><button class="btn red" id="again" type="button" hidden>Siguiente</button></div>
+        <p class="note" id="rules"></p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="ranking"><h2>🏆 Clasificación</h2><div id="top"><p class="note">Cargando…</p></div></section>
+
+  <footer class="ver" id="ver"></footer>
+</div>
+<div class="update" id="upd" hidden role="status"><span>✨ Hay una versión nueva. Tu progreso no se pierde.</span><button id="updGo" type="button">Actualizar</button><button id="updLater" type="button">Luego</button></div>
+
+<script src="supabase-config.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+function shuffle(a){a=a.slice();for(let k=a.length-1;k>0;k--){const j=Math.floor(Math.random()*(k+1));[a[k],a[j]]=[a[j],a[k]]}return a}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+/* base letter: capitals, no accents, but keeping Ñ */
+function base(s){return String(s).toUpperCase().replace(/Ñ/g,"\u0001").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/\u0001/g,"Ñ")}
+function gw(s){return base(s).replace(/[^A-ZÑ]/g,"")}
+
+/* ---------- words from around the world: "Word|clue" ---------- */
+const THEMES={
+  paises:{n:"Países",ic:"🌍",d:"Países de los cinco continentes",w:[
+    "Japón|Asia: la tierra del sol naciente","Brasil|América del Sur: samba y carnaval","Egipto|África: pirámides junto al Nilo","Canadá|América del Norte: la hoja de arce","Australia|Oceanía: canguros y koalas","India|Asia: el Taj Mahal está aquí","México|América del Norte: tacos y mariachis","Argentina|América del Sur: tango y Patagonia","Noruega|Europa: fiordos y auroras boreales","Kenia|África: safaris en la sabana","Marruecos|África: Marrakech y el Atlas","Grecia|Europa: islas blancas y dioses del Olimpo","Italia|Europa: tiene forma de bota","Perú|América del Sur: Machu Picchu","Islandia|Europa: volcanes y géiseres","Vietnam|Asia: la bahía de Ha Long","Nueva Zelanda|Oceanía: el país de los kiwis","Sudáfrica|África: tiene tres capitales","Turquía|Entre Europa y Asia: Estambul","Mongolia|Asia: estepas y yurtas","Finlandia|Europa: miles de lagos y saunas","Chile|América del Sur: el país más largo y estrecho","Tailandia|Asia: templos dorados en Bangkok","Etiopía|África: la cuna del café","Portugal|Europa: fado y bacalao","Colombia|América del Sur: café y cumbia","Indonesia|Asia: más de 17.000 islas","Madagascar|África: la isla de los lémures","Irlanda|Europa: la isla esmeralda","Cuba|Caribe: salsa y coches antiguos","Suiza|Europa: relojes, chocolate y Alpes","Corea del Sur|Asia: el k-pop nació aquí"]},
+  capitales:{n:"Capitales",ic:"🏙️",d:"Las grandes capitales del planeta",w:[
+    "Tokio|Capital de Japón","París|Capital de Francia","Londres|Capital del Reino Unido","Roma|Capital de Italia","Berlín|Capital de Alemania","Lima|Capital de Perú","Ottawa|Capital de Canadá","Canberra|Capital de Australia","El Cairo|Capital de Egipto","Nairobi|Capital de Kenia","Buenos Aires|Capital de Argentina","Bogotá|Capital de Colombia","Moscú|Capital de Rusia","Pekín|Capital de China","Seúl|Capital de Corea del Sur","Bangkok|Capital de Tailandia","Atenas|Capital de Grecia","Oslo|Capital de Noruega","Lisboa|Capital de Portugal","Dublín|Capital de Irlanda","Hanói|Capital de Vietnam","Santiago|Capital de Chile","Quito|Capital de Ecuador","La Habana|Capital de Cuba","Ankara|Capital de Turquía","Varsovia|Capital de Polonia","Estocolmo|Capital de Suecia","Nueva Delhi|Capital de la India","Rabat|Capital de Marruecos","Wellington|Capital de Nueva Zelanda","Reikiavik|Capital de Islandia","Montevideo|Capital de Uruguay","Ciudad de México|Capital de México","Viena|Capital de Austria"]},
+  comida:{n:"Comida del mundo",ic:"🍜",d:"Platos típicos de cada rincón",w:[
+    "Sushi|Japón: arroz con pescado crudo","Pizza|Italia: nació en Nápoles","Tacos|México: tortilla de maíz rellena","Cruasán|Francia: bollo de hojaldre","Kebab|Turquía: carne asada en vertical","Curry|India: salsa de especias","Ceviche|Perú: pescado marinado en limón","Hummus|Oriente Medio: crema de garbanzos","Ramen|Japón: sopa de fideos","Cuscús|Magreb: sémola al vapor","Gulash|Hungría: guiso con pimentón","Empanada|Argentina y Chile: masa rellena","Falafel|Oriente Medio: bolitas de garbanzo fritas","Lasaña|Italia: capas de pasta al horno","Arepa|Venezuela y Colombia: pan de maíz","Musaka|Grecia: berenjena y carne al horno","Fondue|Suiza: queso fundido para mojar","Kimchi|Corea: col fermentada y picante","Feijoada|Brasil: guiso de frijoles negros","Poutine|Canadá: patatas con queso y salsa","Baklava|Turquía y Grecia: pastel de miel y nueces","Tajín|Marruecos: guiso en olla de barro","Guacamole|México: crema de aguacate","Risotto|Italia: arroz cremoso","Pho|Vietnam: sopa de fideos con hierbas","Dim sum|China: bocaditos al vapor","Paella|España: arroz de Valencia","Pierogi|Polonia: empanadillas hervidas","Burrito|México: tortilla de trigo enrollada","Pad thai|Tailandia: fideos salteados"]},
+  animales:{n:"Animales",ic:"🦘",d:"Fauna de todos los continentes",w:[
+    "Canguro|Australia: salta con su cría en la bolsa","Panda|China: come bambú todo el día","Koala|Australia: duerme en los eucaliptos","Jirafa|África: el animal más alto","Elefante|África y Asia: tiene trompa","Pingüino|Antártida: ave que no vuela","Tigre|Asia: el felino más grande","León|África: el rey de la sabana","Cebra|África: rayas blancas y negras","Hipopótamo|África: vive en los ríos","Llama|Andes: escupe cuando se enfada","Alpaca|Andes: lana muy suave","Kiwi|Nueva Zelanda: ave sin alas","Ornitorrinco|Australia: mamífero que pone huevos","Lémur|Madagascar: cola con anillos","Bisonte|América del Norte: gran bóvido de las praderas","Alce|Norte de Europa y América: grandes cuernos","Camello|Desiertos de Asia: tiene dos jorobas","Cocodrilo|Ríos tropicales: reptil enorme","Gorila|África: el primate más grande","Orangután|Borneo y Sumatra: el hombre de la selva","Jaguar|Amazonas: felino con manchas","Perezoso|Centroamérica: el más lento","Oso polar|Ártico: blanco como la nieve","Morsa|Ártico: largos colmillos","Tucán|América del Sur: pico enorme y colorido","Cóndor|Andes: gran ave que planea","Dromedario|Sahara: una sola joroba","Suricata|Desierto del Kalahari: vigila de pie","Yak|Tíbet: bóvido de pelo largo","Ñandú|América del Sur: ave corredora"]},
+  maravillas:{n:"Maravillas",ic:"🗽",d:"Monumentos famosos del mundo",w:[
+    "Torre Eiffel|París, Francia","Coliseo|Roma, Italia","Machu Picchu|Ciudad inca en Perú","Taj Mahal|Agra, India","Gran Muralla|China: miles de kilómetros","Pirámides|Guiza, Egipto","Esfinge|Egipto: cuerpo de león","Petra|Jordania: ciudad excavada en la roca","Chichén Itzá|Pirámide maya en México","Cristo Redentor|Río de Janeiro, Brasil","Estatua de la Libertad|Nueva York, Estados Unidos","Big Ben|Londres, Reino Unido","Partenón|Atenas, Grecia","Angkor Wat|Templo de Camboya","Stonehenge|Círculo de piedras en Inglaterra","Kremlin|Moscú, Rusia","Ópera de Sídney|Australia: parece velas de barco","Alhambra|Granada, España","Torre de Pisa|Italia: está inclinada","Acrópolis|Atenas, Grecia","Moáis|Estatuas de la Isla de Pascua","Burj Khalifa|Dubái: el rascacielos más alto","Sagrada Familia|Barcelona, España","Monte Rushmore|Estados Unidos: caras de presidentes","Puerta de Brandeburgo|Berlín, Alemania","Golden Gate|Puente de San Francisco","Tikal|Ciudad maya en Guatemala","Ciudad Prohibida|Palacio de Pekín"]},
+  naturaleza:{n:"Naturaleza",ic:"🏔️",d:"Ríos, montañas, desiertos y océanos",w:[
+    "Amazonas|Río y selva de América del Sur","Nilo|El gran río de África","Everest|La montaña más alta del mundo","Sahara|El gran desierto de África","Himalaya|Cordillera de Asia","Andes|La cordillera más larga","Danubio|Río que cruza diez países de Europa","Misisipi|Gran río de Estados Unidos","Kilimanjaro|La montaña más alta de África","Atacama|Desierto de Chile, de los más secos","Gobi|Desierto de Mongolia y China","Iguazú|Cataratas entre Argentina y Brasil","Niágara|Cataratas entre Canadá y Estados Unidos","Gran Cañón|Arizona, Estados Unidos","Fiordo|Brazo de mar entre montañas","Volga|El río más largo de Europa","Ganges|Río sagrado de la India","Alpes|Montañas del centro de Europa","Patagonia|Sur de Argentina y Chile","Serengueti|Parque de Tanzania","Pacífico|El océano más grande","Antártida|El continente helado","Groenlandia|La isla más grande del mundo","Galápagos|Islas de Ecuador","Uluru|Gran roca roja de Australia","Monte Fuji|Volcán de Japón","Vesubio|Volcán junto a Nápoles","Caribe|Mar de playas turquesa","Gran Barrera de Coral|Arrecife de Australia","Mar Muerto|Tan salado que flotas"]},
+  viajeras:{n:"Palabras viajeras",ic:"✈️",d:"Palabras que el español trajo de otros idiomas",w:[
+    "Chocolate|Del náhuatl, la lengua de los aztecas","Tomate|Del náhuatl (México)","Aguacate|Del náhuatl (México)","Huracán|Del taíno, una lengua del Caribe","Canoa|Del taíno (Caribe)","Hamaca|Del taíno (Caribe)","Tsunami|Del japonés: ola de puerto","Karaoke|Del japonés: orquesta vacía","Kimono|Del japonés: cosa para vestir","Safari|Del suajili: viaje","Bumerán|De una lengua aborigen de Australia","Iglú|Del inuit: casa","Kayak|Del inuit: barca de cazador","Champú|Del hindi: masajear","Pijama|Del hindi y el persa: ropa para las piernas","Yogur|Del turco","Quiosco|Del turco, a través del francés","Robot|Del checo: trabajo","Sauna|Del finés","Almohada|Del árabe","Azúcar|Del árabe","Ajedrez|Del árabe","Ojalá|Del árabe: si Dios quiere","Garaje|Del francés","Fútbol|Del inglés: balón con el pie","Papa|Del quechua (Andes)","Pampa|Del quechua: llanura","Mapache|Del náhuatl (México)","Cacahuete|Del náhuatl (México)","Ketchup|Del chino, a través del inglés","Tifón|Del chino: gran viento","Mosquito|Del español fue a muchas lenguas"]},
+  instrumentos:{n:"Instrumentos",ic:"🪕",d:"La música de cada país",w:[
+    "Sitar|India: muchas cuerdas","Gaita|Galicia y Escocia: con fuelle","Charango|Andes: guitarrita de diez cuerdas","Balalaika|Rusia: caja triangular","Ukelele|Hawái: guitarra pequeña","Bandoneón|Argentina: el alma del tango","Koto|Japón: arpa tumbada","Yembé|África occidental: tambor de copa","Marimba|Guatemala: teclas de madera","Cajón|Perú: te sientas encima para tocarlo","Banjo|Estados Unidos: música country","Acordeón|Europa: se abre y se cierra","Quena|Andes: flauta de caña","Zampoña|Andes: flauta de varios tubos","Laúd|Mundo árabe y Europa: panza redonda","Buzuki|Grecia: cuerdas y mástil largo","Mandolina|Italia: pequeña y con ocho cuerdas","Maracas|Caribe: se agitan","Gamelán|Indonesia: orquesta de gongs","Castañuelas|España: se tocan con los dedos","Violín|Italia: se toca con arco","Gong|Asia: disco de metal que retumba","Didyeridú|Australia: tubo larguísimo de madera","Tabla|India: pareja de tambores","Kora|África occidental: arpa de 21 cuerdas","Steelpan|Trinidad y Tobago: tambor de bidón","Erhu|China: violín de dos cuerdas","Arpa|Irlanda: aparece en su escudo"]}
+};
+for(const k in THEMES)THEMES[k].w=THEMES[k].w.map(s=>{const [l,c]=s.split("|");return{w:gw(l),label:l.toUpperCase(),clue:c,from:THEMES[k].n}});
+(function(){const seen=new Set(),all=[];for(const k in THEMES)for(const o of THEMES[k].w)if(!seen.has(o.w)){seen.add(o.w);all.push(o)}
+  THEMES.todo={n:"Todo el mundo",ic:"🌐",d:"Mezcla de todos los temas: "+all.length+" palabras",w:all,wide:true}})();
+for(const k in THEMES)THEMES[k].w.sort((a,b)=>a.w.length-b.w.length);
+const ORDER=["todo",...Object.keys(THEMES).filter(k=>k!=="todo")];
+const PRAISE=["¡Bien!","¡Genial!","¡Muy bien!","¡Eso es!","¡Salvado!","¡Fantástico!","¡Bravo!"];
+const LVMAX=30,MAX_RENAMES=2,PARTS=10;
+
+/* ---------- player (this device, and online with a code) ---------- */
+const LS="ahorcado-mundo-v1";
+function norm(p){p=p||{};return{name:String(p.name||"").slice(0,16),code:typeof p.code==="string"&&/^AH-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(p.code)?p.code:undefined,
+  points:Math.max(0,Math.round(+p.points||0)),levels:(p.levels&&typeof p.levels==="object")?p.levels:{},found:Math.max(0,+p.found||0),renames:Math.max(0,Math.min(99,+p.renames||0)),updated:+p.updated||0}}
+let P=null;try{const j=JSON.parse(localStorage.getItem(LS)||"null");if(j&&j.name)P=norm(j)}catch(e){}
+function saveLocal(){try{if(P)localStorage.setItem(LS,JSON.stringify(P));else localStorage.removeItem(LS)}catch(e){}}
+
+const C=window.SUPABASE_CONFIG;const ONLINE=!!(C&&C.url&&C.key);
+function rpc(fn,args){if(!ONLINE)return Promise.reject(new Error("sin conexión online"));
+  const h={"Content-Type":"application/json",apikey:C.key};if(/^eyJ/.test(C.key))h.Authorization="Bearer "+C.key;
+  return fetch(C.url.replace(/\/+$/,"")+"/rest/v1/rpc/"+fn,{method:"POST",headers:h,body:JSON.stringify(args||{})})
+    .then(async r=>{const t=await r.text();let j=null;try{j=t?JSON.parse(t):null}catch(e){}if(!r.ok)throw new Error((j&&j.message)||("HTTP "+r.status));return j})}
+let saveT=null;
+function saveOnline(){if(!P||!P.code)return;clearTimeout(saveT);const me=P;saveT=setTimeout(()=>{
+  rpc("ah_save",{p_code:me.code,p_name:me.name,p_points:me.points,p_data:{levels:me.levels,found:me.found}}).then(ok=>{
+    if(ok===false&&P===me){P.code=undefined;saveLocal();setMsg("Tu código ha cambiado en otro dispositivo o ya no existe. Recupéralo con «¿Ya tienes un código?».")}loadTop()}).catch(()=>{})},800)}
+function save(){P.updated=Date.now();saveLocal();saveOnline()}
+let msg="";function setMsg(t){msg=t;renderPlayer()}
+const normCode=c=>String(c||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^AH/,"").replace(/^(.{4})(.{4}).*$/,"AH-$1-$2");
+
+function haveCodeUI(){return `<details><summary>¿Ya tienes un código?</summary><div class="nrow"><input id="cIn" maxlength="14" placeholder="AH-XXXX-XXXX" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn" id="cLoad" type="button">Recuperar</button></div></details>`}
+function renderPlayer(){
+  const el=$("player");let h="";
+  if(!P){
+    h=`<b>¿Cómo te llamas?</b><div class="nrow"><input id="pName" maxlength="16" placeholder="Tu nombre de jugador" autocomplete="off"><button class="btn" id="pGo" type="button">¡A jugar!</button></div>`+(ONLINE?haveCodeUI():"");
+  }else{
+    h=`<div class="row" style="justify-content:space-between"><span>Juega <b id="pN"></b> · <b style="color:var(--gold)">${P.points.toLocaleString("es-ES")}</b> puntos</span></div>`;
+    if(P.code)h+=`<div class="row"><span class="note">Tu código:</span><span class="code" id="pCode"></span><button class="btn ghost" id="cCopy" type="button">Copiar</button></div><p class="note">Apúntalo: con él recuperas tus puntos en cualquier móvil u ordenador.</p>`;
+    else if(ONLINE)h+=`<div class="row"><button class="btn red" id="cCreate" type="button">🌍 Guardar online y salir en la clasificación</button></div>`+haveCodeUI();
+    const left=MAX_RENAMES-P.renames;
+    h+=`<details id="opts"><summary>⚙️ Opciones del jugador</summary><div class="opts" id="optBox">`+
+      (left>0?`<button class="linkbtn" id="oRen" type="button">✏️ Cambiar nombre (${left===1?"te queda 1 cambio":"te quedan "+left+" cambios"})</button>`:`<span class="note">🔒 Nombre definitivo: ya se ha cambiado ${MAX_RENAMES} veces.</span>`)+
+      (P.code?`<button class="linkbtn" id="oRegen" type="button">🔄 Generar un código nuevo</button>`:"")+
+      `<button class="linkbtn" id="oSwitch" type="button">👥 Jugar con otro nombre en este dispositivo</button>`+
+      `<button class="linkbtn" id="oDel" type="button" style="color:var(--bad)">🗑️ Borrar este jugador</button></div></details>`;
+  }
+  if(msg)h+=`<p class="note msg" id="pMsg" role="status"></p>`;
+  el.innerHTML=h;if(msg)$("pMsg").textContent=msg;
+  if($("pN"))$("pN").textContent=P.name;if($("pCode"))$("pCode").textContent=P.code;
+  if($("pGo")){const go=()=>{const n=$("pName").value.trim().slice(0,16);if(!n){setMsg("Escribe tu nombre primero.");return}P=norm({name:n,updated:Date.now()});saveLocal();msg="";renderPlayer();renderThemes()};$("pGo").onclick=go;$("pName").addEventListener("keydown",e=>{if(e.key==="Enter")go()})}
+  if($("cCopy"))$("cCopy").onclick=()=>{try{navigator.clipboard.writeText(P.code).then(()=>{$("cCopy").textContent="¡Copiado!"},()=>{})}catch(e){}};
+  if($("cCreate"))$("cCreate").onclick=async()=>{$("cCreate").disabled=true;try{const r=await rpc("ah_create",{p_name:P.name});P.code=r.code;save();msg="¡Código creado! Apúntalo bien: con él recuperas tus puntos en cualquier dispositivo.";renderPlayer();loadTop()}catch(e){$("cCreate").disabled=false;setMsg("No se ha podido crear el código. Revisa la conexión.")}};
+  if($("cLoad")){const load=async()=>{const code=normCode($("cIn").value);if(!/^AH-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)){setMsg("Escribe el código completo, por ejemplo AH-7K3Q-9XPA.");return}
+      try{const r=await rpc("ah_load",{p_code:code});if(!r){setMsg("No existe ningún jugador con ese código.");return}
+        const d=r.data||{};P=norm({name:r.name,code,points:r.points,levels:d.levels,found:d.found,renames:r.renames,updated:Date.now()});saveLocal();msg="¡Recuperado! Hola, "+r.name+".";renderPlayer();renderThemes();loadTop()}
+      catch(e){setMsg("No se ha podido recuperar. Revisa la conexión.")}};
+    $("cLoad").onclick=load;$("cIn").addEventListener("keydown",e=>{if(e.key==="Enter")load()})}
+  if($("oRen"))$("oRen").onclick=renameUI;
+  if($("oRegen"))$("oRegen").onclick=regenUI;
+  if($("oSwitch"))$("oSwitch").onclick=()=>{askBox(`Vas a jugar con otro nombre. ${P.code?"Apunta antes tu código ("+esc(P.code)+") para poder recuperar a "+esc(P.name)+" después.":"Los puntos de "+esc(P.name)+" no tienen código y se perderán en este dispositivo."}`,"Sí, cambiar",()=>{msg="";P=null;saveLocal();showThemes();renderPlayer()})};
+  if($("oDel"))$("oDel").onclick=()=>{askBox(`¿Seguro que quieres borrar a <b>${esc(P.name)}</b>? Se perderán sus puntos y niveles${P.code?", y saldrá de la clasificación":""}. No se puede deshacer.`,"Sí, borrar",async()=>{
+      if(P.code){try{await rpc("ah_delete",{p_code:P.code})}catch(e){setMsg("No se ha podido borrar online. Revisa la conexión.");return}}
+      msg="Jugador borrado.";P=null;saveLocal();showThemes();renderPlayer();loadTop()},true)};
+}
+function askBox(html,okText,fn,danger){const b=$("optBox");if(!b)return;
+  b.innerHTML=`<p class="note" style="color:var(--ink)">${html}</p><div class="row"><button class="btn ${danger?"red":""}" id="aOk" type="button">${okText}</button><button class="btn ghost" id="aNo" type="button">Cancelar</button></div>`;
+  $("aNo").onclick=()=>renderPlayer();$("aOk").onclick=()=>{$("aOk").disabled=true;fn()}}
+function renameUI(){const b=$("optBox");if(!b||P.renames>=MAX_RENAMES)return;const left=MAX_RENAMES-P.renames;
+  b.innerHTML=`<label class="note" for="rIn">Nuevo nombre (máximo 16 letras). ${left===1?"Es tu último cambio.":"Solo puedes cambiarlo "+MAX_RENAMES+" veces en total."}</label><div class="nrow" style="width:100%"><input id="rIn" maxlength="16" autocomplete="off"><button class="btn" id="rOk" type="button">Guardar</button></div><button class="linkbtn" id="rNo" type="button">Cancelar</button>`;
+  const i=$("rIn");i.value=P.name;i.focus();
+  const ok=()=>{const n=i.value.trim().slice(0,16);if(!n||n===P.name){renderPlayer();return}P.name=n;P.renames++;save();msg=`¡Listo! Ahora te llamas ${n}.`;renderPlayer()};
+  $("rOk").onclick=ok;i.addEventListener("keydown",e=>{if(e.key==="Enter")ok()});$("rNo").onclick=()=>renderPlayer()}
+function regenUI(){askBox("Se creará un código nuevo y <b>el anterior dejará de funcionar</b>. Tus puntos y tu puesto se mantienen. En tus otros dispositivos tendrás que poner el código nuevo.","Sí, código nuevo",async()=>{
+  try{const r=await rpc("ah_regen",{p_code:P.code});if(!r||!r.code){setMsg("Ese código ya no existe en el servidor.");return}P.code=r.code;save();msg="¡Código nuevo creado! Apúntalo bien.";renderPlayer()}
+  catch(e){setMsg("No se ha podido crear el código nuevo. Revisa la conexión.")}})}
+
+/* ---------- ranking ---------- */
+let topList=[];
+function loadTop(){if(!ONLINE){$("top").innerHTML='<p class="note">La clasificación online no está activada.</p>';return}
+  rpc("ah_top",{p_limit:20}).then(r=>{topList=Array.isArray(r)?r:[];renderTop()}).catch(()=>{$("top").innerHTML='<p class="note">No se ha podido cargar la clasificación.</p>'})}
+function renderTop(){const m=["🥇","🥈","🥉"];
+  $("top").innerHTML=topList.length?topList.map((d,i)=>`<div class="wrow${P&&P.code&&d.name===P.name&&d.points===P.points?" me":""}"><span>${m[i]||(i+1)+"º"}</span><span class="n">${esc(d.name)}</span><span>${Number(d.points).toLocaleString("es-ES")} pts</span></div>`).join(""):'<p class="note">Todavía no hay nadie. Pulsa «Guardar online» y sé la primera persona.</p>'}
+
+/* ---------- sound ---------- */
+let ac=null;function A(){if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(ac&&ac.state==="suspended")ac.resume();return ac}
+function tone(f,t,d,type,v){const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(ac.destination);o.start(t);o.stop(t+d+.05)}
+const SFX={ok(){if(!A())return;const t=ac.currentTime;[659,784].forEach((f,k)=>tone(f,t+k*.07,.12,"square",.05))},bad(){if(!A())return;tone(200,ac.currentTime,.25,"sawtooth",.05)},tick(){if(!A())return;tone(880,ac.currentTime,.05,"triangle",.07)},
+  word(){if(!A())return;const t=ac.currentTime;[523,659,784,1047].forEach((f,k)=>tone(f,t+k*.07,.14,"square",.06))},
+  win(){if(!A())return;const t=ac.currentTime;[523,659,784,1047,1319].forEach((f,k)=>tone(f,t+k*.1,.25,"triangle",.08))},
+  lose(){if(!A())return;const t=ac.currentTime;[392,330,262,196].forEach((f,k)=>tone(f,t+k*.16,.3,"sawtooth",.05))}};
+
+/* ---------- themes & levels ---------- */
+let theme=null;const pick={};
+function lvUnlocked(th){return Math.min(LVMAX,Math.max(1,(P&&P.levels[th])||1))}
+function renderThemes(){$("themes").innerHTML=ORDER.map(k=>{const t=THEMES[k];return `<button class="theme${t.wide?" wide":""}" id="th-${k}" type="button" data-th="${k}"><span class="ico">${t.ic}</span><b>${t.n}</b><span>${t.d}</span><span class="lvtag">Nivel ${lvUnlocked(k)} de ${LVMAX}</span></button>`}).join("")}
+$("themes").addEventListener("click",e=>{const b=e.target.closest("[data-th]");if(!b)return;if(!P){setMsg("Primero escribe tu nombre aquí arriba.");$("pName")&&$("pName").focus();window.scrollTo({top:0,behavior:"smooth"});return}A();theme=b.dataset.th;startLevel()});
+function showThemes(){$("vGame").hidden=true;$("vThemes").hidden=false;document.body.classList.remove("ingame");renderThemes();try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}ping()}
+$("back").onclick=()=>{try{if(location.hash==="#jugando"){history.back();setTimeout(()=>{if(!$("vGame").hidden)showThemes()},400);return}}catch(e){}showThemes()};
+window.addEventListener("popstate",()=>{if(!$("vGame").hidden)showThemes()});
+/* difficulty by level: fewer mistakes allowed, longer words, more words per level, the clue costs points, fewer letters given */
+function cfg(lv){
+  const lives=Math.max(6,10-Math.floor((lv-1)/5));
+  const words=lv<=10?3:lv<=20?4:5;
+  const clue=lv<=8?"free":lv<=18?"ask":"cost";
+  const hints=lv<=4?3:lv<=10?2:lv<=20?1:0;
+  const txt=`Puedes fallar ${lives} veces por palabra. `+(clue==="free"?"La pista se ve desde el principio.":clue==="ask"?"La pista está tapada: verla no cuesta puntos, pero si no la miras ganas 5 más.":"La pista está tapada y verla resta 10 puntos de la palabra.")+(hints?` Tienes ${hints} ${hints===1?"letra regalada":"letras regaladas"} por nivel.`:" Ya no hay letras regaladas.");
+  return{lives,words,clue,hints,txt}}
+function renderLv(){const u=lvUnlocked(theme),lv=S.level,el=$("lv");
+  el.innerHTML=`<button class="btn ghost" id="lvPrev" type="button" aria-label="Nivel anterior"${lv<=1?" disabled":""}>◀</button><span class="lvlabel">Nivel <b>${lv}</b> <small class="note">de ${LVMAX}</small></span><button class="btn ghost" id="lvNext" type="button" aria-label="Nivel siguiente"${lv>=u?" disabled":""}>${lv>=u&&u<LVMAX?"🔒":"▶"}</button>${u>lv+1?`<button class="btn ghost" id="lvMax" type="button">Ir al ${u} ⏩</button>`:""}`;
+  $("lvPrev").onclick=()=>{pick[theme]=lv-1;startLevel()};$("lvNext").onclick=()=>{pick[theme]=lv+1;startLevel()};if($("lvMax"))$("lvMax").onclick=()=>{pick[theme]=u;startLevel()}}
+
+/* fit to very big screens */
+let UIZ=1;
+function fitZoom(){let z=1;try{const w=innerWidth;if(w>=1700&&matchMedia("(pointer:fine)").matches)z=Math.min(2.6,w/1450)}catch(e){}
+  UIZ=z;const el=document.querySelector(".wrap");if(el)el.style.zoom=z===1?"":z.toFixed(3)}
+let fitT=null;window.addEventListener("resize",()=>{clearTimeout(fitT);fitT=setTimeout(fitZoom,80)});
+fitZoom();
+
+/* ---------- the hangman ---------- */
+const ROWS=["QWERTYUIOP","ASDFGHJKLÑ","ZXCVBNM"];
+const S={level:1,c:null,list:[],idx:0,cur:null,guessed:new Set(),miss:0,hints:0,clueSeen:false,state:"play",earned:0,recent:{}};
+function chooseWords(lv,n){
+  /* words sorted by length: low levels take from the short end, high levels from the long end */
+  const all=THEMES[theme].w,L=all.length,f=(lv-1)/(LVMAX-1),win=Math.max(n+2,Math.round(L*.4));
+  let start=Math.round(f*(L-win));start=Math.max(0,Math.min(L-win,start));
+  const recent=S.recent[theme]||[];
+  let pool=all.slice(start,start+win).filter(o=>!recent.includes(o.w));if(pool.length<n)pool=all.slice(start,start+win);
+  const out=shuffle(pool).slice(0,n);S.recent[theme]=[...recent,...out.map(o=>o.w)].slice(-Math.floor(L/2));return out}
+function startLevel(){
+  const u=lvUnlocked(theme),lv=pick[theme]&&pick[theme]<=u?pick[theme]:u;S.level=lv;S.c=cfg(lv);S.hints=S.c.hints;S.earned=0;
+  S.list=chooseWords(lv,S.c.words);S.idx=0;
+  $("vThemes").hidden=true;$("vGame").hidden=false;$("gTitle").textContent=THEMES[theme].ic+" "+THEMES[theme].n;
+  $("rules").textContent=S.c.txt+" Pulsa las letras o escríbelas con el teclado.";
+  try{if(location.hash!=="#jugando")history.pushState(null,"","#jugando")}catch(e){}
+  document.body.classList.add("ingame");renderLv();startWord();window.scrollTo({top:0});ping();
+  $("bubble").textContent=`Nivel ${lv}: adivina ${S.list.length} palabras. Cada una vale ${wordPts()} puntos, más un extra por los fallos que te sobren. ¡Suerte!`;
+}
+function startWord(){S.cur=S.list[S.idx];S.guessed=new Set();S.miss=0;S.clueSeen=S.c.clue==="free";S.state="play";$("again").hidden=true;$("gal").classList.remove("dead","saved");
+  /* very short words in "todo": nothing special. Letters not in A–Z/Ñ are shown from the start. */
+  buildKb();render();if(S.idx>0)$("bubble").textContent=`Palabra ${S.idx+1} de ${S.list.length}. ¡Vamos!`}
+function wordPts(){return 10+2*S.level}
+function revealedAll(){return [...S.cur.w].every(ch=>S.guessed.has(ch))}
+function render(){
+  const o=S.cur,over=S.state!=="play";
+  /* word, with accents shown once the letter is found */
+  const parts=o.label.split(" ");const len=o.label.length;
+  const W=$("word");W.className="word"+(len>16?" xlong":len>10?" long":"");
+  W.innerHTML=parts.map(p=>`<span class="wd">${[...p].map(ch=>{const b=base(ch);
+      if(!/[A-ZÑ]/.test(b))return `<span class="l sym">${esc(ch)}</span>`;
+      const got=S.guessed.has(b);if(got)return `<span class="l in" data-b="${b}">${esc(ch)}</span>`;
+      if(S.state==="lost")return `<span class="l miss">${esc(ch)}</span>`;return `<span class="l"></span>`}).join("")}</span>`).join("");
+  W.setAttribute("aria-label","Palabra: "+[...o.label].map(ch=>{const b=base(ch);return /[A-ZÑ]/.test(b)?(S.guessed.has(b)||over?ch:"hueco"):ch===" "?"espacio":ch}).join(" "));
+  /* clue */
+  const cl=$("clue");
+  if(S.clueSeen||over)cl.innerHTML=`<span class="tx">🧭 ${esc(o.clue)}</span>`+(theme==="todo"?`<span class="note">(${esc(o.from)})</span>`:"");
+  else cl.innerHTML=`<button class="btn ghost" id="seeClue" type="button">🧭 Ver pista${S.c.clue==="cost"?" (−10 puntos)":""}</button>`;
+  if($("seeClue"))$("seeClue").onclick=()=>{S.clueSeen=true;SFX.tick();render()};
+  /* drawing: the gallows already built at hard levels, plus one part per mistake */
+  const pre=PARTS-S.c.lives,drawn=pre+S.miss;
+  for(let k=0;k<PARTS;k++)$("p"+k).classList.toggle("on",k<drawn||S.state==="lost");
+  $("lives").innerHTML=`Fallos: <b>${S.miss}</b> / ${S.c.lives}`;
+  /* keys */
+  document.querySelectorAll("#kb .key").forEach(k=>{const ch=k.dataset.k,used=S.guessed.has(ch),hit=used&&S.cur.w.includes(ch);
+    k.classList.toggle("ok",hit);k.classList.toggle("no",used&&!hit);k.disabled=used||over;k.setAttribute("aria-label",ch+(hit?", acertada":used?", fallada":""))});
+  /* top strip, dots, hint */
+  $("count").textContent=`Palabra ${S.idx+1} de ${S.list.length}`;$("pts").textContent=(P?P.points:0).toLocaleString("es-ES");
+  $("dots").innerHTML=S.list.map((_,k)=>`<i class="${k<S.idx||(k===S.idx&&S.state==="won")?"done":k===S.idx?"now":""}"></i>`).join("");
+  const h=$("hint");h.textContent=S.hints>0?`💡 Letra (${S.hints})`:"💡 Sin letras";h.disabled=S.hints<=0||over;
+}
+function buildKb(){$("kb").innerHTML=ROWS.map(r=>`<div class="kr">${[...r].map(ch=>`<button class="key" type="button" data-k="${ch}">${ch}</button>`).join("")}</div>`).join("")}
+$("kb").addEventListener("click",e=>{const k=e.target.closest(".key");if(!k||k.disabled)return;A();guess(k.dataset.k)});
+function guess(ch){
+  if(S.state!=="play"||S.guessed.has(ch))return;S.guessed.add(ch);
+  if(S.cur.w.includes(ch)){
+    const n=[...S.cur.w].filter(x=>x===ch).length;
+    if(revealedAll()){wordWon();return}
+    SFX.ok();render();$("bubble").textContent=n>1?`¡Bien! La ${ch} sale ${n} veces.`:`¡Bien! Hay una ${ch}.`;
+  }else{
+    S.miss++;SFX.bad();
+    if(S.miss>=S.c.lives){wordLost();return}
+    const left=S.c.lives-S.miss;render();$("bubble").textContent=`No hay ninguna ${ch}. ${left===1?"¡Cuidado, solo te queda un fallo!":"Te quedan "+left+" fallos."}`;
+  }
+}
+function wordWon(){
+  S.state="won";const extra=3*(S.c.lives-S.miss),clueAdj=S.c.clue==="ask"&&!S.clueSeen?5:S.c.clue==="cost"&&S.clueSeen?-10:0;
+  const got=Math.max(5,wordPts()+extra+clueAdj);S.earned+=got;P.points+=got;P.found++;save();
+  $("gal").classList.add("saved");render();
+  const last=S.idx>=S.list.length-1;
+  $("bubble").textContent=`${rnd(PRAISE)} Era ${S.cur.label}. +${got} puntos`+(extra?` (incluye ${extra} por los fallos que te sobraron`+(clueAdj>0?" y 5 por no mirar la pista":clueAdj<0?", menos 10 por la pista":"")+")":clueAdj<0?" (menos 10 por la pista)":clueAdj>0?" (incluye 5 por no mirar la pista)":"")+".";
+  if(last){setTimeout(levelWon,700);SFX.word();return}
+  SFX.word();$("again").hidden=false;$("again").textContent="Siguiente palabra →";$("again").onclick=()=>{S.idx++;startWord()};$("again").focus({preventScroll:true});
+}
+function wordLost(){
+  S.state="lost";$("gal").classList.add("dead");SFX.lose();render();
+  $("bubble").textContent=`¡Ahorcado! La palabra era ${S.cur.label}. Los puntos que has ganado se quedan, pero tienes que repetir el nivel ${S.level} con palabras nuevas.`;
+  $("again").hidden=false;$("again").textContent="Repetir el nivel";$("again").onclick=()=>{pick[theme]=S.level;startLevel()};$("again").focus({preventScroll:true});
+}
+function levelWon(){
+  const lv=S.level,next=Math.min(LVMAX,lv+1),bonus=20+lv*5;pick[theme]=null;P.points+=bonus;if((P.levels[theme]||1)<next)P.levels[theme]=next;save();SFX.win();render();
+  $("bubble").textContent=lv<LVMAX?`¡Nivel ${lv} superado! Ganas ${bonus} puntos extra (${S.earned+bonus} en total) y desbloqueas el nivel ${next}, que será un poco más difícil.`:`¡Increíble! Has superado el nivel más difícil de este tema. +${bonus} puntos.`;
+  $("again").hidden=false;$("again").textContent=lv<LVMAX?`Jugar el nivel ${next}`:"Jugar otra vez";$("again").onclick=startLevel;$("again").focus({preventScroll:true});renderLv();
+}
+$("hint").onclick=()=>{if(S.hints<=0||S.state!=="play")return;
+  /* give the missing letter that appears most often */
+  const miss=[...new Set(S.cur.w)].filter(ch=>!S.guessed.has(ch));if(!miss.length)return;
+  miss.sort((a,b)=>[...S.cur.w].filter(x=>x===b).length-[...S.cur.w].filter(x=>x===a).length);
+  S.hints--;SFX.tick();const ch=miss[0];S.guessed.add(ch);if(revealedAll()){wordWon();return}render();$("bubble").textContent=`Te regalo la ${ch}.`};
+document.addEventListener("keydown",e=>{
+  if($("vGame").hidden||e.ctrlKey||e.metaKey||e.altKey)return;const t=e.target;if(t&&(t.tagName==="INPUT"||t.tagName==="TEXTAREA"))return;
+  if(e.key==="Enter"&&!$("again").hidden&&document.activeElement!==$("again")){e.preventDefault();$("again").click();return}
+  if(e.key.length!==1)return;const ch=base(e.key);if(!/^[A-ZÑ]$/.test(ch))return;e.preventDefault();A();guess(ch)});
+
+/* ---------- owner's "who is playing" ping (nothing is shown to players) ---------- */
+let sid=null;try{sid=sessionStorage.getItem("ah-sid")}catch(e){}
+if(!sid){sid=Math.random().toString(36).slice(2,10)+Date.now().toString(36);try{sessionStorage.setItem("ah-sid",sid)}catch(e){}}
+function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden?"Eligiendo tema":THEMES[theme].n+" · nivel "+S.level;
+  rpc("ah_ping",{p_session:sid,p_name:P?P.name:null,p_place:place.slice(0,40),p_code:!!(P&&P.code)}).catch(()=>{})}
+setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
+
+/* ---------- new version notice ---------- */
+const APP_VERSION="1.0.0";
+$("ver").textContent="Versión "+APP_VERSION;
+(function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
+  function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
+  $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
+  $("updLater").onclick=()=>{$("upd").hidden=true;snooze=Date.now()+600000};
+  setTimeout(chk,5000);setInterval(chk,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()})})();
+
+/* ---------- start ---------- */
+try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+renderPlayer();renderThemes();loadTop();
+if(P&&P.code)rpc("ah_load",{p_code:P.code}).then(r=>{if(!r)return;if(r.name!==P.name||r.renames!==P.renames){P.name=r.name;P.renames=Math.max(P.renames,r.renames||0);saveLocal();renderPlayer()}}).catch(()=>{});
+</script>
+</body></html>

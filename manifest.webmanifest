@@ -1,0 +1,17 @@
+{
+  "name": "El ahorcado · la vuelta al mundo",
+  "short_name": "El ahorcado",
+  "description": "El ahorcado con palabras de todo el mundo, 30 niveles por tema y clasificación online.",
+  "lang": "es",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1830",
+  "theme_color": "#0f1830",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
