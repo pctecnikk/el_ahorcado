@@ -37,7 +37,7 @@ h1 .tiles{display:inline-flex;gap:.08em}
 h1 .t{display:inline-grid;place-items:center;width:.95em;height:1.1em;border-radius:.14em;background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:.8em}
 h1 .t.r{background:var(--red);color:#fff}
 h1 .t.y{background:var(--gold);color:#3a2600}
-h1 .t.b{background:transparent;color:var(--gold);box-shadow:inset 0 -.12em 0 var(--gold)}
+h1 .t.b{background:var(--bg);color:var(--gold);box-shadow:inset 0 0 0 .07em var(--gold)}
 .sub{font-family:var(--display);font-weight:800;color:var(--gold);font-size:clamp(16px,4.4vw,24px);letter-spacing:.02em}
 h2{font-family:var(--display);font-weight:800;font-size:20px;margin:0;color:var(--gold)}
 .note{font-size:14px;color:var(--muted);line-height:1.5;margin:0}
@@ -174,7 +174,7 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
 </head><body>
 <div class="wrap">
   <header>
-    <h1 aria-label="El ahorcado"><span class="tiles" aria-hidden="true"><span class="t r">A</span><span class="t b">_</span><span class="t">O</span><span class="t y">R</span><span class="t">C</span><span class="t b">_</span><span class="t r">D</span><span class="t">O</span></span></h1>
+    <h1 aria-label="El ahorcado"><span class="tiles" aria-hidden="true"><span class="t r">A</span><span class="t b">H</span><span class="t">O</span><span class="t y">R</span><span class="t">C</span><span class="t b">A</span><span class="t r">D</span><span class="t">O</span></span></h1>
     <span class="sub">El ahorcado · la vuelta al mundo</span>
     <p class="note">Palabras de todo el mundo · 50 niveles por tema · clasificación online</p>
   </header>
@@ -502,7 +502,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="1.1.0";
+const APP_VERSION="1.1.1";
 $("ver").textContent="Versión "+APP_VERSION;
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
