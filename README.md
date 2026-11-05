@@ -9,6 +9,7 @@ El juego del ahorcado para el móvil y el ordenador con **palabras de todo el mu
 - **Teclado en pantalla con Ñ**, o el teclado del ordenador.
 - **Puntos online con código de jugador** (por ejemplo `AH-7K3Q-9XPA`): sirve para recuperar el progreso (puntos, niveles y medallas) en cualquier dispositivo.
 - Opciones del jugador: cambiar el nombre (2 veces como máximo), generar un código nuevo y borrar el jugador.
+- **Copia de seguridad**: en *Opciones del jugador*, «Guardar copia de seguridad» descarga un archivo `ahorcado-progreso-AAAA-MM-DD.json` con los puntos, niveles y medallas. Con «Cargar una copia de seguridad» se recupera en otro móvil o en este mismo si se borran los datos del navegador. Sirve también para quien juega sin código.
 - **Aviso de versión nueva** para quien tenga el juego abierto cuando se publica una actualización.
 
 ## Publicarlo con GitHub Pages

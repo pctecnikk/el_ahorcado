@@ -180,6 +180,7 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
   </header>
 
   <section class="card" id="player"></section>
+  <input type="file" id="bkFile" accept=".json,application/json" hidden>
 
   <section id="vThemes">
     <h2 style="margin-bottom:12px">Elige un tema</h2>
@@ -295,7 +296,7 @@ function haveCodeUI(){return `<details><summary>¿Ya tienes un código?</summary
 function renderPlayer(){
   const el=$("player");let h="";
   if(!P){
-    h=`<b>¿Cómo te llamas?</b><div class="nrow"><input id="pName" maxlength="16" placeholder="Tu nombre de jugador" autocomplete="off"><button class="btn" id="pGo" type="button">¡A jugar!</button></div>`+(ONLINE?haveCodeUI():"");
+    h=`<b>¿Cómo te llamas?</b><div class="nrow"><input id="pName" maxlength="16" placeholder="Tu nombre de jugador" autocomplete="off"><button class="btn" id="pGo" type="button">¡A jugar!</button></div>`+(ONLINE?haveCodeUI():"")+`<button class="linkbtn" id="bkLoad" type="button">📂 Cargar una copia de seguridad</button>`;
   }else{
     h=`<div class="row" style="justify-content:space-between"><span>Juega <b id="pN"></b> · <b style="color:var(--gold)">${P.points.toLocaleString("es-ES")}</b> puntos · <b style="color:var(--gold)">${P.medals.length}</b> ${P.medals.length===1?"medalla":"medallas"}</span></div>`;
     if(P.code)h+=`<div class="row"><span class="note">Tu código:</span><span class="code" id="pCode"></span><button class="btn ghost" id="cCopy" type="button">Copiar</button></div><p class="note">Apúntalo: con él recuperas tus puntos en cualquier móvil u ordenador.</p>`;
@@ -304,6 +305,8 @@ function renderPlayer(){
     h+=`<details id="opts"><summary>⚙️ Opciones del jugador</summary><div class="opts" id="optBox">`+
       (left>0?`<button class="linkbtn" id="oRen" type="button">✏️ Cambiar nombre (${left===1?"te queda 1 cambio":"te quedan "+left+" cambios"})</button>`:`<span class="note">🔒 Nombre definitivo: ya se ha cambiado ${MAX_RENAMES} veces.</span>`)+
       (P.code?`<button class="linkbtn" id="oRegen" type="button">🔄 Generar un código nuevo</button>`:"")+
+      `<button class="linkbtn" id="bkSave" type="button">💾 Guardar copia de seguridad</button>`+
+      `<button class="linkbtn" id="bkLoad" type="button">📂 Cargar una copia de seguridad</button>`+
       `<button class="linkbtn" id="oSwitch" type="button">👥 Jugar con otro nombre en este dispositivo</button>`+
       `<button class="linkbtn" id="oDel" type="button" style="color:var(--bad)">🗑️ Borrar este jugador</button></div></details>`;
   }
@@ -318,6 +321,8 @@ function renderPlayer(){
         const d=r.data||{};P=norm({name:r.name,code,points:r.points,levels:d.levels,found:d.found,themes:d.themes,medals:d.medals,renames:r.renames,updated:Date.now()});saveLocal();msg="¡Recuperado! Hola, "+r.name+".";renderPlayer();renderThemes();renderStats();loadTop()}
       catch(e){setMsg("No se ha podido recuperar. Revisa la conexión.")}};
     $("cLoad").onclick=load;$("cIn").addEventListener("keydown",e=>{if(e.key==="Enter")load()})}
+  if($("bkSave"))$("bkSave").onclick=backupSave;
+  if($("bkLoad"))$("bkLoad").onclick=()=>$("bkFile").click();
   if($("oRen"))$("oRen").onclick=renameUI;
   if($("oRegen"))$("oRegen").onclick=regenUI;
   if($("oSwitch"))$("oSwitch").onclick=()=>{askBox(`Vas a jugar con otro nombre. ${P.code?"Apunta antes tu código ("+esc(P.code)+") para poder recuperar a "+esc(P.name)+" después.":"Los puntos de "+esc(P.name)+" no tienen código y se perderán en este dispositivo."}`,"Sí, cambiar",()=>{msg="";P=null;saveLocal();showThemes();renderPlayer()})};
@@ -336,6 +341,28 @@ function renameUI(){const b=$("optBox");if(!b||P.renames>=MAX_RENAMES)return;con
 function regenUI(){askBox("Se creará un código nuevo y <b>el anterior dejará de funcionar</b>. Tus puntos y tu puesto se mantienen. En tus otros dispositivos tendrás que poner el código nuevo.","Sí, código nuevo",async()=>{
   try{const r=await rpc("ah_regen",{p_code:P.code});if(!r||!r.code){setMsg("Ese código ya no existe en el servidor.");return}P.code=r.code;save();msg="¡Código nuevo creado! Apúntalo bien.";renderPlayer()}
   catch(e){setMsg("No se ha podido crear el código nuevo. Revisa la conexión.")}})}
+
+/* ---------- backup file (save / load progress) ---------- */
+const BK_APP="ahorcado-vuelta-al-mundo";
+function backupSave(){if(!P)return;const d=new Date(),z=n=>String(n).padStart(2,"0");
+  const fname=`ahorcado-progreso-${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}.json`;
+  const json=JSON.stringify({app:BK_APP,version:APP_VERSION,saved:d.toISOString(),player:P},null,2);
+  try{const url=URL.createObjectURL(new Blob([json],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download=fname;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+    setMsg(`Copia guardada en Descargas: ${fname}. Guárdala bien${P.code?": incluye tu código de jugador":""}.`)}
+  catch(e){setMsg("No se ha podido descargar la copia en este dispositivo.")}}
+function backupApply(inc){
+  P=inc;saveLocal();msg=`¡Progreso recuperado! Hola, ${inc.name}: tienes ${inc.points.toLocaleString("es-ES")} puntos y ${inc.medals.length} ${inc.medals.length===1?"medalla":"medallas"}.`;showThemes();renderPlayer();renderThemes();renderStats();
+  if(P.code)rpc("ah_load",{p_code:P.code}).then(r=>{if(P!==inc)return;
+    if(!r){P.code=undefined;saveLocal();setMsg("Progreso recuperado, pero el código de la copia ya no existe online. Pulsa «Guardar online» para crear uno nuevo.");return}
+    const d=r.data||{};if((+r.points||0)>P.points){P=norm({name:r.name,code:P.code,points:r.points,levels:d.levels,found:d.found,themes:d.themes,medals:d.medals,renames:r.renames,updated:Date.now()});saveLocal();setMsg(`¡Progreso recuperado! Online tenías más puntos, así que se han usado esos: ${P.points.toLocaleString("es-ES")}.`);renderThemes();renderStats()}
+    else save();loadTop()}).catch(()=>{});}
+$("bkFile").addEventListener("change",e=>{const f=e.target.files&&e.target.files[0];e.target.value="";if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{let inc;try{const j=JSON.parse(r.result);if(!j||j.app!==BK_APP||!j.player||!j.player.name)throw 0;inc=norm(j.player);inc.updated=Date.now()}
+    catch(err){setMsg("Ese archivo no es una copia de este ahorcado. Elige el archivo que empieza por ahorcado-progreso.");return}
+    if(P&&$("optBox")){$("opts").open=true;askBox(`Se cambiará <b>${esc(P.name)}</b> (${P.points.toLocaleString("es-ES")} puntos) por <b>${esc(inc.name)}</b> (${inc.points.toLocaleString("es-ES")} puntos), que es lo que hay en la copia.${P.code&&P.code!==inc.code?" Apunta antes tu código actual ("+esc(P.code)+").":""}`,"Sí, cargar la copia",()=>backupApply(inc))}
+    else backupApply(inc)};
+  r.onerror=()=>setMsg("No se ha podido leer el archivo.");r.readAsText(f)});
 
 /* ---------- ranking ---------- */
 let topList=[];
@@ -502,7 +529,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="1.1.1";
+const APP_VERSION="1.2.0";
 $("ver").textContent="Versión "+APP_VERSION;
 (function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
   function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
