@@ -132,7 +132,11 @@ details[open] summary{margin-bottom:8px}
 .wrow .n{min-width:0;overflow-wrap:anywhere}
 .update{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;background:var(--gold);color:#3a2600;font-weight:800;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px))}
 .update button{font:inherit;font-weight:900;border:0;border-radius:999px;padding:10px 18px;background:#3a2600;color:var(--gold);cursor:pointer}
-.ver{text-align:center;font-size:12px;color:var(--muted);opacity:.8;font-variant-numeric:tabular-nums;padding:4px 0 8px}
+.ver{display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 0 10px}
+.verpill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--muted);font:700 13px/1.2 var(--body);font-variant-numeric:tabular-nums;cursor:default}
+.verpill.ok{color:var(--good);border-color:color-mix(in srgb,var(--good) 45%,transparent)}
+.verpill.new{background:var(--gold);border-color:var(--gold);color:#3a2600;cursor:pointer}
+.verdate{font-size:12px;color:var(--muted);opacity:.8}
 /* while playing, hide what is not needed */
 body.ingame #player,body.ingame #ranking,body.ingame #stats,body.ingame #ver,body.ingame header .note,body.ingame header .sub{display:none}
 body.ingame header h1{font-size:clamp(20px,5vw,30px)}
@@ -230,9 +234,9 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
 
   <section class="card" id="ranking"><h2>🌍 Clasificación mundial</h2><div id="top"><p class="note">Cargando…</p></div></section>
 
-  <footer class="ver" id="ver"></footer>
+  <footer class="ver" id="ver"><button class="verpill" id="verPill" type="button" disabled></button><span class="verdate" id="verDate"></span></footer>
 </div>
-<div class="update" id="upd" hidden role="status"><span>✨ Hay una versión nueva. Tu progreso no se pierde.</span><button id="updGo" type="button">Actualizar</button><button id="updLater" type="button">Luego</button></div>
+<div class="update" id="upd" hidden role="status"><span id="updTxt">✨ Hay una versión nueva. Tu progreso no se pierde.</span><button id="updGo" type="button">Actualizar</button><button id="updLater" type="button">Luego</button></div>
 
 <script src="supabase-config.js"></script>
 <script>
@@ -529,13 +533,20 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="1.2.0";
-$("ver").textContent="Versión "+APP_VERSION;
-(function(){if(APP_VERSION.startsWith("__")||!/^https?:$/.test(location.protocol))return;let latest=null,snooze=0;
-  function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(j&&j.version&&j.version!==APP_VERSION){latest=j.version;if(Date.now()>=snooze)$("upd").hidden=false}}).catch(()=>{})}
-  $("updGo").onclick=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
+const APP_VERSION="1.2.1",APP_DATE="5 de noviembre de 2026 a las 02:05";
+/* version shown at the bottom: green when it is the latest one, yellow (tap to update) when there is a newer one */
+function verPill(state,rel){const b=$("verPill");b.className="verpill"+(state?" "+state:"");b.disabled=state!=="new";
+  b.textContent=state==="ok"?`✅ Versión ${APP_VERSION} · actualizada`:state==="new"?`✨ Hay una versión nueva (${rel}) · Actualizar`:`Versión ${APP_VERSION}`}
+(function(){const live=/^https?:$/.test(location.protocol);
+  verPill("",null);$("verDate").textContent=live?`Publicada el ${APP_DATE}`:"Versión de prueba";
+  if(!live)return;let latest=null,snooze=0;
+  const go=()=>location.replace(location.pathname+"?v="+encodeURIComponent(latest||Date.now()));
+  function chk(){if(document.hidden)return;fetch("version.json?t="+Date.now(),{cache:"no-store"}).then(r=>r.ok?r.json():null).then(j=>{if(!j||!j.version)return;
+    if(j.version!==APP_VERSION){latest=j.version;verPill("new",j.version);$("updTxt").textContent=`✨ Hay una versión nueva (${j.version}). Tu progreso no se pierde.`;if(Date.now()>=snooze)$("upd").hidden=false}
+    else verPill("ok")}).catch(()=>{})}
+  $("verPill").onclick=go;$("updGo").onclick=go;
   $("updLater").onclick=()=>{$("upd").hidden=true;snooze=Date.now()+600000};
-  setTimeout(chk,5000);setInterval(chk,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()})})();
+  chk();setInterval(chk,60000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)chk()})})();
 
 /* ---------- start ---------- */
 try{if(location.hash)history.replaceState(null,"",location.pathname+location.search)}catch(e){}
