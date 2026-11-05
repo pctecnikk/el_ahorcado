@@ -31,6 +31,9 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   background-image:linear-gradient(180deg,rgba(47,128,255,.28),transparent 220px);background-repeat:no-repeat}
 .wrap{max-width:640px;margin:0 auto;padding-block:18px 48px;display:flex;flex-direction:column;gap:18px}
+.home{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;min-height:40px;box-sizing:border-box;border-radius:999px;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);font:800 15px/1 var(--body);text-decoration:none;transition:border-color .15s,color .15s,transform .1s;-webkit-tap-highlight-color:transparent}
+.home:hover,.home:focus-visible{border-color:var(--gold);color:var(--gold)}
+.home:active{transform:scale(.96)}
 header{text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px}
 h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,8.5vw,56px);line-height:1;margin:0;letter-spacing:-.02em;text-wrap:balance}
 h1 .tiles{display:inline-flex;gap:.08em}
@@ -178,6 +181,7 @@ body.ingame .wrap{gap:10px;padding-block:10px 24px}
 </head><body>
 <div class="wrap">
   <header>
+    <a class="home" href="https://ai-online-games.com/" aria-label="Ir a la pantalla principal de IA Online Games"><span aria-hidden="true">🏠</span> Inicio</a>
     <h1 aria-label="El ahorcado"><span class="tiles" aria-hidden="true"><span class="t r">A</span><span class="t b">H</span><span class="t">O</span><span class="t y">R</span><span class="t">C</span><span class="t b">A</span><span class="t r">D</span><span class="t">O</span></span></h1>
     <span class="sub">El ahorcado · la vuelta al mundo</span>
     <p class="note">Palabras de todo el mundo · 50 niveles por tema · clasificación online</p>
@@ -533,7 +537,7 @@ function ping(){if(document.hidden||!ONLINE)return;const place=$("vGame").hidden
 setTimeout(ping,3000);setInterval(ping,30000);document.addEventListener("visibilitychange",()=>{if(!document.hidden)ping()});
 
 /* ---------- new version notice ---------- */
-const APP_VERSION="1.3.0",APP_DATE="5 de noviembre de 2026 a las 02:09";
+const APP_VERSION="1.3.1",APP_DATE="5 de noviembre de 2026 a las 02:29";
 /* version shown at the bottom: green when it is the latest one, yellow (tap to update) when there is a newer one */
 function verPill(state,rel){const b=$("verPill");b.className="verpill"+(state?" "+state:"");b.disabled=state!=="new";
   b.textContent=state==="ok"?`✅ Versión ${APP_VERSION} · actualizada`:state==="new"?`✨ Hay una versión nueva (${rel}) · Actualizar`:`Versión ${APP_VERSION}`}
